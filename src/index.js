@@ -44,7 +44,7 @@ function getBalance(statement){
 
 //rota para criar conta e verificar se cliente já existe ou não
 app.post("/account", (req, res) => {
-    const {cpf, name} = req.body
+    const {cpf, name, email} = req.body
     // The some() method checks if any array elements pass a test (provided as a function).
     const customerAlreadyExists = customers.some( customer => customer.cpf === cpf)
     if(customerAlreadyExists){
@@ -54,6 +54,7 @@ app.post("/account", (req, res) => {
     customers.push({
         cpf,
         name,
+        email,
         id: uuidv4(),
         statement: [],
     })
@@ -113,8 +114,34 @@ app.get("/statement/date", verifyIfExistsCPF, (req, res) => {
     statement.created_at.toDateString() === 
     dateFormat.toDateString()
     )
-
     return res.json(statement)
+})
+// método para atualizar o e-mail do usuário
+app.put("/account", verifyIfExistsCPF,(req, res) => {
+    const {email} = req.body
+    const {customer} = req
+
+    customer.email = email
+    return res.status(201).send()
+})
+
+app.get("/account", verifyIfExistsCPF, (req, res) => {
+    const {customer} = req
+    return res.json(customer)
+})
+
+app.delete("/account", verifyIfExistsCPF, (req, res) => {
+    const {customer} = req
+    //  usando splice para deletar um customer da lista de customers
+    customers.splice(customer, 1)
+
+    return res.status(200).json(customers)
+})
+
+app.get("/balance", verifyIfExistsCPF, (req, res) => {
+    const {customer} = req
+    const balance = getBalance(customer.statement)
+    return res.json(balance)
 })
 
 app.listen(80, () => {
